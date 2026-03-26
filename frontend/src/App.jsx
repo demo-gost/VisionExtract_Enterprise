@@ -84,7 +84,7 @@ function App() {
 
       <section id="home" className="hero-section">
         <div className="hero-content glass-panel">
-          <div className="badge">Milestone 4: Enterprise Deployment</div>
+          <div className="badge">Group 4</div>
           <h1 className="hero-title">Automated Subject <span className="text-gradient">Isolation</span></h1>
           <p className="hero-subtitle">
             Upload any input picture, and our Deep Learning model will output a new image where only the subject is visible and everything else is rendered completely black.
@@ -168,7 +168,7 @@ function App() {
         </div>
       </section>
 
-      <footer className="glass-panel"><p><strong>VisionExtract Pro</strong> • Developed by Sai Jannawar • TattvaSys IT Solutions</p></footer>
+      <footer className="glass-panel"><p><strong>VisionExtract Pro</strong> • Developed by Sai • Rahul• Rishikesh</p></footer>
     </div>
   );
 }
