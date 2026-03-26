@@ -12,10 +12,14 @@ import base64
 # 1. Start the API Server
 app = FastAPI(title="VisionExtract Pro API")
 
-# 2. CORS Security
+# 2. CORS Security: Updated for Live Deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://vision-extract-enterprise.vercel.app", # Your live frontend
+        "http://localhost:5173",                       # Your local testing
+        "*"                                            # Wildcard (optional)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
