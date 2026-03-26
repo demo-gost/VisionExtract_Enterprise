@@ -48,7 +48,7 @@ function App() {
 
     try {
       // NOTE: We removed { responseType: 'blob' } because we expect JSON now!
-      const response = await axios.post("http://localhost:8000/api/isolate", formData);
+      const response = await axios.post("https://visionextract-enterprise.onrender.com/api/isolate", formData);
       
       // Unpack the Base64 strings from the JSON and turn them into image URLs
       setMaskUrl(`data:image/png;base64,${response.data.mask_image}`);
