@@ -16,7 +16,7 @@ app = FastAPI(title="VisionExtract Pro API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # This allows EVERY origin to connect
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
