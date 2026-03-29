@@ -43,11 +43,34 @@ function App() {
   const handleProcessImage = async () => {
     if (!selectedFile) return;
     setLoading(true);
-    const formData = new FormData();
-    formData.append("file", selectedFile);
 
     try {
-      // NOTE: We removed { responseType: 'blob' } because we expect JSON now!
+      // --- THE RAM SAVER: Compress Image Before Sending ---
+      const imageBitmap = await createImageBitmap(selectedFile);
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 800; // This guarantees Render's 512MB RAM won't crash!
+      
+      let width = imageBitmap.width;
+      let height = imageBitmap.height;
+      
+      if (width > MAX_WIDTH) {
+        height = Math.floor(height * (MAX_WIDTH / width));
+        width = MAX_WIDTH;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(imageBitmap, 0, 0, width, height);
+      
+      // Convert back to a lightweight JPEG file
+      const compressedBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+      
+      // --- SEND TO FASTAPI ---
+      const formData = new FormData();
+      formData.append("file", compressedBlob, "compressed.jpg");
+
+      // Make sure this is your active Render URL!
       const response = await axios.post("https://visionextract-enterprise.onrender.com/api/isolate", formData);
       
       // Unpack the Base64 strings from the JSON and turn them into image URLs
@@ -56,7 +79,7 @@ function App() {
       
     } catch (error) {
       console.error("Error connecting to AI Server:", error);
-      alert("❌ Failed to connect to AI Engine. Is your FastAPI server running?");
+      alert("❌ AI Engine failed. Check Render logs to see if it crashed out of memory!");
     } finally {
       setLoading(false);
     }
@@ -72,7 +95,7 @@ function App() {
 
       <nav className="navbar glass-panel">
         <div className="nav-brand" onClick={() => scrollTo('home')}>
-          <span className="logo-icon"></span> VisionExtract <span className="text-gradient">Pro</span>
+          <span className="logo-icon">✂️</span> VisionExtract <span className="text-gradient">Pro</span>
         </div>
         <div className="nav-links">
           <button onClick={() => scrollTo('home')}>Home</button>
@@ -168,7 +191,7 @@ function App() {
         </div>
       </section>
 
-      <footer className="glass-panel"><p><strong>VisionExtract Pro</strong> • Developed by Sai • Rahul• Rishikesh</p></footer>
+      <footer className="glass-panel"><p><strong>VisionExtract Pro</strong> • Developed by Sai • Rahul • Rishikesh</p></footer>
     </div>
   );
 }
