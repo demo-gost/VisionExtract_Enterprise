@@ -12,25 +12,21 @@ import base64
 # 1. Start the API Server
 app = FastAPI(title="VisionExtract Pro API")
 
-# 2. Strict Enterprise CORS Security
+# 2. The Ultimate Safe CORS Setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://vision-extract-enterprise.vercel.app",           # Your main domain
-        "https://vision-extract-enterprise-72h0t9xmc.vercel.app", # Your preview domain
-        "http://localhost:5173"                                   # For local testing
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],       # Accept requests from anywhere
+    allow_credentials=False,   # Must be False when using "*"
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 3. Auto-Download the AI Brain (UPGRADED TO HUMAN-SPECIFIC MODEL)
-model_path = "u2net_human_seg.onnx"
-model_url = "https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net_human_seg.onnx"
+# 3. Auto-Download the AI Brain (UPGRADED TO 4MB LITE MODEL)
+model_path = "u2netp.onnx"
+model_url = "https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx"
 
 if not os.path.exists(model_path):
-    print("📦 First boot detected! Downloading U²-Net Human Segmentation Brain...")
+    print("📦 First boot detected! Downloading U²-Net-P Lite Brain (4MB)...")
     urllib.request.urlretrieve(model_url, model_path)
     print("✅ Download complete!")
 
@@ -65,33 +61,27 @@ async def process_image(file: UploadFile = File(...)):
     pred_mask = raw_output[0][0, 0, :, :]
 
     # --- POST-PROCESSING ---
-    # 1. Scale the raw output back up to HD resolution
     pred_mask = (pred_mask - np.min(pred_mask)) / (np.max(pred_mask) - np.min(pred_mask))
     hd_mask = cv2.resize(pred_mask, (original_w, original_h), interpolation=cv2.INTER_LINEAR)
 
-    # 2. CREATE THE PURE BINARY MASK (White Subject, Black Background)
-    # Lowered threshold to 0.2 to capture complex clothing and hair
-    binary_mask = (hd_mask > 0.2).astype(np.uint8) * 255
+    # Threshold set to 0.4 for the Lite model's confidence logic
+    binary_mask = (hd_mask > 0.4).astype(np.uint8) * 255
 
-    # 3. Create the Final Isolated Image
     hd_mask_3d = np.expand_dims(hd_mask, axis=-1)
     black_bg = np.zeros_like(original_img_rgb)
     final_result = (original_img_rgb * hd_mask_3d + black_bg * (1 - hd_mask_3d)).astype(np.uint8)
 
     # --- BASE64 PACKAGING ---
-    # Convert Mask to Base64 String
     mask_pil = Image.fromarray(binary_mask, mode="L")
     mask_buf = io.BytesIO()
     mask_pil.save(mask_buf, format="PNG")
     mask_b64 = base64.b64encode(mask_buf.getvalue()).decode('utf-8')
 
-    # Convert Result to Base64 String
     result_pil = Image.fromarray(final_result)
     result_buf = io.BytesIO()
     result_pil.save(result_buf, format="PNG")
     result_b64 = base64.b64encode(result_buf.getvalue()).decode('utf-8')
     
-    # Shoot BOTH images back to React inside a JSON dictionary!
     return {
         "mask_image": mask_b64,
         "result_image": result_b64
