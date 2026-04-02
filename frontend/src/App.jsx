@@ -70,8 +70,8 @@ function App() {
       const formData = new FormData();
       formData.append("file", compressedBlob, "compressed.jpg");
 
-      // Make sure this is your active Render URL!
-      const response = await axios.post("https://visionextract-enterprise.onrender.com/api/isolate", formData);
+      // --- SEND TO HUGGING FACE FASTAPI ---
+      const response = await axios.post("https://saijannawar-visionextract-api.hf.space/api/isolate", formData);
       
       // Unpack the Base64 strings from the JSON and turn them into image URLs
       setMaskUrl(`data:image/png;base64,${response.data.mask_image}`);
